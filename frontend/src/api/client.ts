@@ -3,7 +3,8 @@ import type {
   HealthResponse, QueryResponse,
 } from '../types';
 
-export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/$/, '');
+const rawUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').trim().replace(/\/$/, '');
+export const API_URL = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl}/api`;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
