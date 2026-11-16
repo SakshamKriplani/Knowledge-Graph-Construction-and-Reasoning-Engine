@@ -1,168 +1,223 @@
-# Knowledge Graph Construction and Reasoning Engine
+# 🕸️ Knowledge Graph Construction & Reasoning Engine
 
-Turns PDFs and text files into a knowledge graph, lets you explore it visually, and answers natural-language questions by multi-hop traversal over the graph. Every answer comes with the path it followed and the source sentence behind each hop. If there is no supporting path, it says so.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://knowledge-graph-construction-and-re.vercel.app/)
+[![API Status](https://img.shields.io/badge/API_Status-Online-brightgreen?style=for-the-badge&logo=render)](https://knowledge-graph-construction-and.onrender.com/api/health)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.162-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-```
-upload PDF/TXT ─▶ clean + chunk ─▶ entities (spaCy) ─▶ relations (Gemini or rules)
-               ─▶ entity resolution ─▶ NetworkX graph + SQLite ─▶ React Flow UI
-question ─▶ entity linking + pattern detection ─▶ BFS / path search ─▶ answer + evidence
-```
-
-![Canonical demo: the Microsoft → OpenAI → Azure path highlighted with evidence](docs/demo.png)
-
-The full spec is in [`plan.md`](plan.md).
-
-## Quick start
-
-### Option A: Running with Docker (Recommended)
-
-Prerequisites: [Docker Desktop](https://www.docker.com/products/docker-desktop/) running.
-
-```bash
-# Optional: create .env if you want to use a Gemini API key
-copy .env.example .env    # Linux/Mac: cp .env.example .env
-
-# Build and start all services
-docker-compose up --build
-```
-
-- **Frontend**: http://localhost:5173
-- **Backend API Docs**: http://localhost:8000/docs
-
-To run in the background: `docker-compose up -d --build`  
-To stop containers: `docker-compose down`
+> An end-to-end neuro-symbolic engine that transforms unstructured text and PDFs into structured knowledge graphs, visualizes complex networks interactively, and answers natural language questions via multi-hop traversal with complete evidence provenance.
 
 ---
 
-### Option B: Running Locally
+### 🌐 Live Deployments
 
-Prerequisites: Python 3.10+, Node.js 18+.
+- **Interactive Web Application**: [https://knowledge-graph-construction-and-re.vercel.app/](https://knowledge-graph-construction-and-re.vercel.app/)
+- **Backend API & Swagger Docs**: [https://knowledge-graph-construction-and.onrender.com/docs](https://knowledge-graph-construction-and.onrender.com/docs)
+- **API Health Check**: [https://knowledge-graph-construction-and.onrender.com/api/health](https://knowledge-graph-construction-and.onrender.com/api/health)
 
-```bash
-# Backend
-cd backend
-python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python -m spacy download en_core_web_sm
-cp .env.example .env              # Windows: copy .env.example .env
-uvicorn app.main:app --reload     # http://localhost:8000/docs
+---
 
-# Frontend (second terminal)
-cd frontend
-npm install
-cp .env.example .env
-npm run dev                       # http://localhost:5173
+## 📸 Demo Preview
+
+![Canonical Demo: Microsoft → OpenAI → Azure multi-hop path reasoning with provenance](docs/demo.png)
+
+*The canonical query: **"Which cloud infrastructure is associated with the company Microsoft invested in?"** resolved via `Microsoft —invested_in→ OpenAI —uses_infrastructure→ Azure` with full sentence attribution and canvas path highlighting.*
+
+---
+
+## ⚡ Key Capabilities
+
+- **📄 Robust Document Ingestion**: Ingests PDFs and raw text files using PyMuPDF (`fitz`), with smart page-splitting, unicode cleaning, and chunk overlap.
+- **🧠 Dual-Mode Relation Extraction**:
+  - **Deterministic Rule Engine (Offline)**: spaCy dependency parsing with grammar rules and controlled relationship schemas. Requires **zero API keys**.
+  - **LLM Augmented (Gemini 2.5 Flash)**: Contextual extraction with grounded entity validation and hallucination filters.
+- **🔗 Intelligent Entity Resolution**: Normalizes corporate suffixes, merges aliases (e.g., *"Sam Altman"* $\leftrightarrow$ *"Altman"*), and performs token-based fuzzy matching.
+- **🕸️ Interactive Visualization**: Built on React Flow (`@xyflow/react`) with Dagre hierarchical graph layouts, real-time node filtering, type badges, and degree statistics.
+- **🔍 Explainable Multi-Hop Reasoning**:
+  - Traverses the NetworkX knowledge graph using directed and undirected BFS / shortest-path algorithms.
+  - Returns step-by-step reasoning paths where **every single hop** quotes the exact source sentence and originating document.
+  - If no supporting path exists, the engine explicitly rejects false conclusions rather than hallucinating.
+
+---
+
+## 🏗️ Architecture Pipeline
+
+```text
+┌─────────────────┐       ┌────────────────────┐       ┌────────────────────┐
+│   Upload PDF/TXT│ ───▶  │ Text Clean & Chunk │ ───▶  │  spaCy NER Engine  │
+└─────────────────┘       └────────────────────┘       └────────────────────┘
+                                                                  │
+                                                                  ▼
+┌─────────────────┐       ┌────────────────────┐       ┌────────────────────┐
+│ React Flow UI   │ ◀───  │ NetworkX + SQLite  │ ◀───  │ Entity Resolution  │
+│ Interactive Map │       │ Persistence Store  │       │ & Alias Linking    │
+└─────────────────┘       └────────────────────┘       └────────────────────┘
+        │                                                         ▲
+        ▼                                                         │
+┌─────────────────┐       ┌────────────────────┐       ┌────────────────────┐
+│ Natural Language│ ───▶  │ Entity Linking &   │ ───▶  │ Multi-Hop BFS /    │
+│ User Question   │       │ Pattern Detection  │       │ Path Traversal     │
+└─────────────────┘       └────────────────────┘       └────────────────────┘
 ```
 
-Open the app and click **Load sample data**, then try the canonical question:
+---
 
-> Which cloud infrastructure is associated with the company Microsoft invested in?
+## 🚀 Quick Start
 
-Expected: **Azure**, via `Microsoft —invested_in→ OpenAI —uses_infrastructure→ Azure`, with the source sentence for each hop and the three-node path highlighted on the canvas.
+### Option 1: Docker Compose (Recommended)
 
-## Running without Gemini
+Run the entire stack (Frontend + Backend + SQLite + Reverse Proxy) with a single command:
 
-`GEMINI_API_KEY` is optional. When it is blank:
+```bash
+# 1. Clone repository
+git clone https://github.com/SakshamKriplani/Knowledge-Graph-Construction-and-Reasoning-Engine.git
+cd Knowledge-Graph-Construction-and-Reasoning-Engine
 
-- relations come from spaCy dependency rules (`data/verb_relations.json`), confidence 0.5
-- answers are template-based, built only from the retrieved path
+# 2. (Optional) Set up Gemini API key in .env
+copy .env.example .env    # Linux/Mac: cp .env.example .env
 
-With a key, Gemini extracts relations per chunk (confidence 0.8) and phrases the final answer. Both are validated: triples must use the controlled vocabulary, quote a sentence that exists in the chunk, and refer to detected entities; an answer that names anything outside the retrieved path is discarded in favour of the template. Any LLM failure falls back to the rule path for that chunk.
+# 3. Build & start containers
+docker-compose up --build
+```
 
-Because rule-based triples have confidence 0.5, answers in no-key mode show **medium** confidence. **High** needs mean confidence ≥ 0.7 with evidence on every hop.
+- **Frontend**: [http://localhost:5173](http://localhost:5173)
+- **API Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-## Tests
+---
+
+### Option 2: Local Development
+
+#### Prerequisites
+- **Python 3.10+** (Tested on Python 3.11.9)
+- **Node.js 18+** & **npm**
+
+#### 1. Backend Setup
+```bash
+cd backend
+python -m venv venv
+.\venv\Scripts\activate       # Linux/Mac: source venv/bin/activate
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+copy .env.example .env        # Linux/Mac: cp .env.example .env
+uvicorn app.main:app --reload
+```
+*Backend runs on `http://localhost:8000`.*
+
+#### 2. Frontend Setup (New Terminal)
+```bash
+cd frontend
+npm install
+copy .env.example .env        # Linux/Mac: cp .env.example .env
+npm run dev
+```
+*Frontend runs on `http://localhost:5173`.*
+
+---
+
+## 🎯 Supported Question Patterns
+
+| Pattern | Example Question | Resolution Method |
+|---|---|---|
+| **Direct Lookup** | *"Who founded OpenAI?"* / *"Where does Altman work?"* | 1-hop targeted relation match or directed path search |
+| **Chained Multi-Hop** | *"Which cloud infrastructure is associated with the company Microsoft invested in?"* | Multi-hop BFS traversal: `Entity A → r1 → Entity B → r2 → Entity C` |
+| **Entity Connection** | *"How are Sam Altman and Microsoft connected?"* | Bidirectional shortest paths across the graph (up to 4 hops) |
+| **Exploratory Fallback**| *"Tell me about Nvidia"* | 2-hop neighborhood exploration with confidence estimation |
+| **Unknown Entity** | *"What did QuantumCorp acquire?"* | Safe rejection notice when entities do not exist in the graph |
+
+---
+
+## 🛠️ REST API Reference
+
+Interactive OpenAPI documentation is available at `/docs`.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/documents` | Upload and process a PDF/TXT document (multipart) |
+| `POST` | `/api/documents/sample` | Load and parse the pre-bundled AI ecosystem dataset |
+| `GET` | `/api/documents` | List all processed documents |
+| `POST` | `/api/graph/build` | Construct a knowledge graph from selected document IDs |
+| `GET` | `/api/graph/{graph_id}` | Retrieve full graph topology (nodes, edges, statistics) |
+| `GET` | `/api/graph/{graph_id}/entity/{id}` | Inspect incoming/outgoing relationships for a specific node |
+| `GET` | `/api/graph/{graph_id}/search?q=` | Fuzzy entity search across canonical names and aliases |
+| `GET` | `/api/graph/{graph_id}/export` | Export graph data in JSON format |
+| `POST` | `/api/query` | Execute natural language multi-hop graph reasoning |
+| `GET` | `/api/health` | Service health status and LLM configuration check |
+
+---
+
+## 🧪 Testing
+
+The test suite runs completely offline with mocked LLM fallbacks:
 
 ```bash
 cd backend
 pytest
 ```
 
-The suite runs offline with no API key (Gemini is mocked where it is tested). It covers ingestion (PDF, TXT, size and page limits), entity resolution, rule-based relation extraction, graph building, the reasoner (including the canonical question and the unknown-entity case), the Gemini validation layer, and an end-to-end API run on the sample file.
-
-Phase 1 check, which prints everything extracted from the sample:
-
+To run the sample extraction benchmark:
 ```bash
-cd backend
-python -m scripts.extract_sample                 # or pass a path to your own .txt/.pdf
+python -m scripts.extract_sample
 ```
 
-## API
+---
 
-Base URL `/api`; interactive docs at `/docs`.
+## ⚙️ Configuration Reference
 
-| Method | Path | Purpose |
+### Backend (`backend/.env`)
+
+| Variable | Default | Description |
 |---|---|---|
-| POST | `/documents` | Upload and process a file (multipart `file`) |
-| POST | `/documents/sample` | Process the bundled sample (used by the UI's "Load sample data") |
-| GET | `/documents` | List documents |
-| POST | `/graph/build` | Build a graph from `{document_ids}` |
-| GET | `/graph/{graph_id}` | Graph + stats |
-| GET | `/graph/{graph_id}/entity/{entity_id}` | Entity with incoming/outgoing relationships |
-| GET | `/graph/{graph_id}/search?q=` | Fuzzy entity search |
-| GET | `/graph/{graph_id}/export` | JSON export |
-| POST | `/query` | `{graph_id, question, max_hops?}` → answer, paths, evidence, highlights |
-| GET | `/health` | `{status, llm_enabled}` |
+| `GEMINI_API_KEY` | *(empty)* | Optional. If omitted, engine runs in deterministic offline rule mode |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model for relation extraction & phrasing |
+| `DATABASE_URL` | `sqlite:///./kg.db` | SQLite database connection string |
+| `ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated list of allowed CORS origins |
+| `MAX_UPLOAD_MB` | `10` | Maximum file upload size limit |
+| `MAX_PAGES` | `50` | Maximum PDF page count limit |
 
-## Supported question patterns
+### Frontend (`frontend/.env`)
 
-| Pattern | Example | How it is answered |
+| Variable | Default | Description |
 |---|---|---|
-| Relation lookup | "Who founded OpenAI?", "Where does Altman work?" | One-hop edges with that relation (either direction); otherwise a directed BFS (≤ `max_hops`) for a path ending in that relation |
-| Chained lookup | "Which cloud infrastructure is associated with the company Microsoft invested in?" | X —r1→ Y —r2→ Z |
-| Connection | "How are Sam Altman and Microsoft connected?" | Shortest plus up to 3 more simple paths over the undirected graph, max length 4 |
-| Fallback | "Tell me about Nvidia" | 2-hop neighbourhood, low confidence |
-| Unknown entity | "What did Zorblax Corp acquire?" | Says no entity matched, low confidence |
+| `VITE_API_URL` | `http://localhost:8000/api` | Base URL pointing to the backend API |
 
-Relation keywords map to the vocabulary via `data/relation_synonyms.json`.
+---
 
-## Project layout
+## 📁 Repository Structure
 
+```text
+├── backend/
+│   ├── app/
+│   │   ├── routers/       # FastAPI route handlers (documents, graph, query)
+│   │   ├── services/      # Ingestion, NER, relation extraction, graph builder, reasoner
+│   │   ├── config.py      # Pydantic v2 application settings
+│   │   ├── db.py          # SQLite persistence layer and schema definitions
+│   │   ├── main.py        # FastAPI entrypoint and CORS lifecycle
+│   │   └── models.py      # Core data models and schemas
+│   ├── data/              # Controlled vocabularies, seed entities & sample dataset
+│   ├── tests/             # Pytest test suite
+│   ├── Dockerfile         # Python 3.11 container definition
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── api/           # Typed API client
+│   │   ├── components/    # GraphCanvas, QueryPanel, UploadPanel, NodeDetailPanel
+│   │   ├── lib/           # Dagre layout engine and styling utilities
+│   │   ├── types.ts       # TypeScript schemas mirroring backend models
+│   │   └── App.tsx        # Main application dashboard
+│   ├── nginx.conf         # Production Nginx reverse-proxy configuration
+│   ├── Dockerfile         # Multi-stage production container build
+│   └── package.json
+├── docker-compose.yml     # Multi-container orchestration
+├── render.yaml            # Render backend deployment blueprint
+├── plan.md                # System design & implementation specification
+└── README.md
 ```
-backend/
-  app/
-    main.py, config.py, models.py, db.py
-    routers/      documents.py, graph.py, query.py
-    services/     ingestion.py, entity_extractor.py, relation_extractor.py, resolver.py,
-                  graph_builder.py, reasoner.py, answerer.py, llm.py (Gemini wrapper)
-  data/           tech_terms.json, entity_seeds.json, verb_relations.json,
-                  relation_synonyms.json, sample/tech_ecosystem.txt
-  scripts/        extract_sample.py
-  tests/
-frontend/
-  src/
-    api/client.ts, types.ts, App.tsx
-    components/   UploadPanel, GraphCanvas, NodeDetailPanel, SearchFilterBar, QueryPanel
-    lib/          layout.ts (dagre), examples.ts, style.ts
-render.yaml       Render blueprint for the backend
-```
 
-## Implementation notes
+---
 
-- **NER noise.** `en_core_web_sm` often mislabels AI-company names (OpenAI as a place, Anthropic missed). Four deterministic fixes keep the no-key path reliable: an org seed list in the EntityRuler (`data/entity_seeds.json`, alongside the technology terms), surname-only mentions linked to people already seen ("Altman" → Sam Altman), "X is the CEO of Y" forcing X to PERSON, and a majority type vote per normalised name.
-- **Entity resolution.** Names merge on normalised equality (case, punctuation, corporate suffixes, spacing, so "OpenAI" / "OpenAI Inc." / "Open AI" merge), token-subset for people only, or `token_sort_ratio ≥ 90`. Token-subset is limited to people because for organisations it would fold "Google DeepMind" into "Google". Types never mix, so "Apple" (ORG) and "apple" (OTHER) stay separate.
-- **Rule relations** follow the dependency path between two entities, refuse to jump over a third entity ("Anthropic partnered with Amazon, which built AWS" does not yield Anthropic → AWS), handle passive voice ("developed by"), and only use role nouns ("CEO of", "part of") in short verb-free paths.
-- **Persistence.** Graphs are stored in SQLite and rebuilt into NetworkX on first access after a restart.
-- **Large graphs.** Above 150 entities the canvas shows the top 150 by degree with a notice; search, query highlights and the focused node are always shown.
+## 📄 License
 
-## Deploy
-
-**Backend on Render.** New → Blueprint → select this repo (uses `render.yaml`), or create a Python web service with root `backend`, build command `pip install -r requirements.txt && python -m spacy download en_core_web_sm`, and start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set `ALLOWED_ORIGINS` to the Vercel URL (comma-separate several) and optionally `GEMINI_API_KEY`. The free plan's disk is ephemeral, so uploaded documents and graphs reset on redeploy; the sample loads in one click.
-
-**Frontend on Vercel.** Import the repo, set the root directory to `frontend` (framework: Vite), and add `VITE_API_URL=https://<your-render-service>.onrender.com/api`. Redeploy after changing it, since Vite bakes env vars in at build time.
-
-## Configuration
-
-`backend/.env`
-
-| Variable | Default | |
-|---|---|---|
-| `GEMINI_API_KEY` | blank | Optional; blank = rule-based only |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | |
-| `DATABASE_URL` | `sqlite:///./kg.db` | |
-| `ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated |
-| `MAX_UPLOAD_MB` | `10` | |
-| `MAX_PAGES` | `50` | |
-
-`frontend/.env`: `VITE_API_URL=http://localhost:8000/api`
+This project is licensed under the [MIT License](LICENSE).
